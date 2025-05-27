@@ -1,12 +1,17 @@
 # tools/preview_agent.py
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect
 import yaml
-from langchain_community.chat_models import ChatOpenAI
+from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 import os
+import stripe
 
 app = Flask(__name__)
+
+# Stripe config
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
+YOUR_DOMAIN = os.environ.get("DOMAIN", "https://ai-agent-store-llm-agent-blueprints.onrender.com")
 
 llm = ChatOpenAI(
     temperature=0.3,
@@ -27,6 +32,46 @@ def preview():
         return jsonify({"response": result})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/buy", methods=["GET"])
+def buy():
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': 'Blueprint Preview Access',
+                    },
+                    'unit_amount': 500,  # $5.00
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=YOUR_DOMAIN + '/?success=true',
+            cancel_url=YOUR_DOMAIN + '/?canceled=true',
+        )
+        return redirect(session.url, code=303)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+
+@app.route("/webhook", methods=["POST"])
+def stripe_webhook():
+    payload = request.data
+    sig_header = request.headers.get("stripe-signature")
+    webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
+    event = None
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 400
+
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        # ✅ Here you could mark user/session as paid
+        print(f"Payment succeeded: {session['id']}")
+    return jsonify(success=True)
 
 @app.route("/")
 def health():
