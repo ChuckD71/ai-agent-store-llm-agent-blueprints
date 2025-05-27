@@ -1,7 +1,7 @@
 # tools/preview_agent.py
 from flask import Flask, request, jsonify
 import yaml
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 import os
