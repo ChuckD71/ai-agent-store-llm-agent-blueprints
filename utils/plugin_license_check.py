@@ -1,0 +1,1 @@
+# Checks plugin access via license key

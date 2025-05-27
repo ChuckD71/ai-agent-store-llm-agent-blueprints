@@ -1,0 +1,1 @@
+# Validates YAML license keys
