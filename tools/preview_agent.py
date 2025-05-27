@@ -1,8 +1,5 @@
 # AIDIVISION Core Agent System
 
-📦 **Version:** `v1.2-dev`
-🗓️ **Status:** Plugin validation, LangChain preview, GUI builder, Stripe delivery, and persona agents (Nyx/Kyuss) integrated
-
 ---
 
 ### 🔄 Replacing `preview_agent.py` with Flask Web Preview Server
