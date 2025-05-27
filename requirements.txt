@@ -1,4 +1,5 @@
-langchain
-openai
 flask
 pyyaml
+langchain
+langchain-community
+openai
